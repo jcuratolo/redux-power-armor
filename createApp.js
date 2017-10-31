@@ -64,11 +64,15 @@ function createBoundActions(config, store) {
     .keys(config.actions)
     .reduce(function (actions, actionType) {
       actions[actionType] = data => {
-        validateActionData(config, actionType, data)
-        store.dispatch({
-          type: actionType,
-          data
-        })
+        var actionShouldHaveData = Boolean(config.actions[actionType].dataSchema)
+        var action = { type: actionType }
+
+        if (actionShouldHaveData) {
+          validateActionData(config, actionType, data)
+          action.data = data
+        }
+
+        store.dispatch(action)
       }
 
       return actions
@@ -83,11 +87,13 @@ function runSelfTest(config, store) {
     .reduce((fakeActionsByType, actionType) => {
       fakeActionsByType[actionType] = fakeActionsByType[actionType] || []
       for (var i = 0; i < config.options.testActions; i++) {
-        var action = { type: actionType }
-        var dataSchema = config.actions[actionType].dataSchema 
-        
+        var action = {
+          type: actionType
+        }
+        var dataSchema = config.actions[actionType].dataSchema
+
         if (dataSchema) action.data = jsf(dataSchema)
-        
+
         fakeActionsByType[actionType].push(action)
       }
 
